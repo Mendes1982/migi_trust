@@ -13,3 +13,13 @@ Cargo.lock
 **/id.json
 **/*.json
 .env
+
+# Rust / Anchor
+target/
+**/target/
+Cargo.lock
+
+# Solana keys
+**/id.json
+**/*.json
+.env
