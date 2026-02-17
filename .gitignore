@@ -3,3 +3,13 @@ target/
 node_modules/
 .env
 .DS_Store
+
+# Rust / Anchor
+target/
+**/target/
+Cargo.lock
+
+# Solana keys
+**/id.json
+**/*.json
+.env
