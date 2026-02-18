@@ -1,26 +1,29 @@
 # 🛡️ MIGI Trust Hub
+**The Universal Trust Layer for the Decentralized Economy.**
 
-**MIGI Trust Hub** is an on-chain reputation MVP built on **Solana** that turns service delivery milestones into **verifiable proof**.
+[![Solana](https://img.shields.io/badge/Network-Solana-black?logo=solana)](https://solana.com/)
+[![FairScale](https://img.shields.io/badge/Infrastructure-FairScale-blue)](https://fairscale.xyz/)
+[![License-MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-- Live demo (wallet connect): http://migi-trust-hub-2026.surge.sh
-- GitHub: https://github.com/Mendes1982/migi_trust
-- Solana Program (Devnet): `3aNa219G1VwZq2gC8NRL9NRGXCbrhnhqivHDpmZS8TeA`
+## 🚀 Vision
+MIGI Trust Hub is an infrastructure-as-a-service (IaaS) platform that solves the "Trust Crisis" in emerging markets. By combining **Solana's high-speed blockchain** with **FairScale's reputation scoring**, we provide a tamper-proof verification layer for freelancers, logistics, and healthcare providers.
 
-## What’s shipped today (MVP)
-- ✅ Solana program deployed on Devnet (Anchor/Rust)
-- ✅ Basic on-chain reputation primitives
-- ✅ Public frontend with Phantom wallet connection (live demo)
+## 🛠️ Tech Stack
+- **Smart Contracts:** Anchor / Rust (Deployed on Solana Devnet)
+- **Reputation Engine:** FairScale API (FairScore Integration)
+- **Backend:** Node.js / Express (Secure Proxy for API Masking)
+- **Frontend:** HTML5 / JavaScript (Integrated with Phantom Wallet)
 
-## FairScale / FairScore integration (bounty scope)
-This project is designed to integrate **FairScale FairScore** as a core signal:
-- reputation gating (tiered access)
-- risk management (limits / friction for low-score wallets)
-- dynamic rewards (boosts for high-score wallets)
+## 🏗️ Architecture
+MIGI Trust Hub operates on a tri-layer architecture:
+1. **Validation Layer:** Consults FairScale to verify wallet history.
+2. **Execution Layer:** A Solana Smart Contract that records reputation.
+3. **Escrow Layer (Upcoming):** Secure Pix-to-USDC gateway.
 
-See: `docs/FAIRSCALE_INTEGRATION.md`
+## 📈 Roadmap
+- **Q1 2024:** Bounty Submission & MVP Validation.
+- **Q2 2024:** Account Abstraction & Pix Integration.
+- **Q3 2024:** MIGI Health Vertical.
 
-## Tech
-Solana (Devnet) • Anchor (Rust) • Phantom • Surge
-
-## Contact
-Mendes (Founder) — tvmax360ofc@gmail.com
+---
+Developed by **MIGI Labs**. Building the future of trust on Solana.
