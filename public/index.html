@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MIGI Trust Hub — Integrity Protocol</title>
+  <script src="https://unpkg.com/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #080c12;
+      --surface: #0e1520;
+      --border:  #1a2540;
+      --accent:  #00e5ff;
+      --accent2: #7c3aed;
+      --green:   #00ff88;
+      --red:     #ff4466;
+      --text:    #e2eaf5;
+      --muted:   #5a6a88;
+      --head:    'Syne', sans-serif;
+      --mono:    'Space Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+    .orb { position: fixed; border-radius: 50%; filter: blur(120px); opacity: .15; pointer-events: none; z-index: 0; }
+    .orb-1 { width: 600px; height: 600px; background: var(--accent2); top: -200px; right: -200px; }
+    .orb-2 { width: 400px; height: 400px; background: var(--accent);  bottom: -100px; left: -100px; }
+    .wrap { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 56px 20px 100px; }
+
+    /* HEADER */
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; flex-wrap: wrap; gap: 16px; }
+    .logo { font-family: var(--head); font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
+    .logo span { color: var(--accent); }
+    .tag { font-size: .62rem; letter-spacing: .15em; color: var(--accent); background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2); padding: 4px 14px; border-radius: 20px; text-transform: uppercase; }
+
+    /* STATUS */
+    .status-bar { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 20px; margin-bottom: 36px; font-size: .76rem; flex-wrap: wrap; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+    .dot.green  { background: var(--green); box-shadow: 0 0 8px var(--green);  animation: pulse 2s infinite; }
+    .dot.yellow { background: #ffd600;      box-shadow: 0 0 8px #ffd600; }
+    .dot.red    { background: var(--red);   box-shadow: 0 0 8px var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    #status-text { flex: 1; color: var(--muted); }
+
+    /* WALLET */
+    .wallet-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 18px; display: none; }
+    .wallet-box .addr { font-size: .72rem; color: var(--accent); word-break: break-all; }
+    .wallet-box .bal  { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+    .wallet-center { text-align: center; margin-bottom: 44px; }
+
+    /* CARDS */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px,1fr)); gap: 22px; margin-bottom: 22px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 26px 22px; position: relative; overflow: hidden; transition: border-color .2s; }
+    .card:hover { border-color: rgba(0,229,255,.25); }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+    .card-label { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .card h3 { font-family: var(--head); font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; }
+
+    /* FORM */
+    label { display: block; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    input[type=text], input[type=number] {
+      width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: .78rem;
+      padding: 10px 13px; margin-bottom: 14px; outline: none; transition: border-color .2s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    .hint { font-size: .68rem; color: var(--muted); margin-top: -8px; margin-bottom: 14px; line-height: 1.5; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--mono); font-size: .78rem; font-weight: 700; border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; transition: all .2s; width: 100%; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
+    .btn-primary:hover:not(:disabled) { opacity: .82; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .38; cursor: not-allowed; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-bottom: 10px; }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(255,68,102,.1); border: 1px solid rgba(255,68,102,.3); color: var(--red); }
+    .btn-danger:hover { background: rgba(255,68,102,.2); }
+
+    /* SBT BADGE */
+    .sbt-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .68rem; padding: 4px 12px; border-radius: 20px; border: 1px solid; margin-top: 10px; }
+    .sbt-none     { border-color: var(--muted); color: var(--muted); }
+    .sbt-verified { border-color: #ffd600;      color: #ffd600; }
+    .sbt-minted   { border-color: var(--green); color: var(--green); }
+
+    /* CONSULTA RESULT */
+    .result-box { margin-top: 14px; font-size: .76rem; display: none; background: #050810; border-radius: 8px; padding: 14px 16px; line-height: 2.1; }
+
+    /* LOG */
+    .log-wrap { background: #050810; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-top: 36px; }
+    .log-label { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    #log { font-size: .73rem; line-height: 1.8; max-height: 220px; overflow-y: auto; color: var(--muted); }
+    #log .ok  { color: var(--green); }
+    #log .err { color: var(--red); }
+    #log .inf { color: var(--accent); }
+    #log .tx  { color: #ffd600; }
+
+    /* SPINNER */
+    .spin { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: s .6s linear infinite; }
+    @keyframes s { to { transform: rotate(360deg); } }
+
+    footer { margin-top: 50px; text-align: center; font-size: .63rem; color: var(--muted); letter-spacing: .08em; }
+    footer a { color: var(--accent); text-decoration: none; }
+    @media(max-width:520px){ .grid{grid-template-columns:1fr} .logo{font-size:1.2rem} }
+  </style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="logo">MIGI <span>Trust</span> Hub</div>
+    <div class="tag">🛡 Solana Devnet · Live</div>
+  </header>
+
+  <div class="status-bar">
+    <div class="dot" id="net-dot"></div>
+    <span id="status-text">Aguardando Phantom...</span>
+    <span style="margin-left:auto;color:var(--muted);font-size:.68rem">
+      Program: <span style="color:var(--accent)">3aNa219G...S8TeA</span>
+    </span>
+  </div>
+
+  <div class="wallet-center">
+    <div class="wallet-box" id="wallet-box">
+      <div class="addr" id="wallet-addr"></div>
+      <div class="bal"  id="wallet-bal"></div>
+    </div>
+    <button class="btn btn-outline" id="btn-connect" style="max-width:260px;margin:0 auto">
+      🔗 Conectar Phantom Wallet
+    </button>
+  </div>
+
+  <!-- CARDS PRINCIPAIS -->
+  <div class="grid">
+
+    <!-- CARD 1: HANDSHAKE -->
+    <div class="card">
+      <div class="card-label">Instrução 01</div>
+      <h3>Inicializar Handshake Vault</h3>
+
+      <label>Endereço do Prestador (Pubkey)</label>
+      <input type="text" id="prestador-addr" placeholder="Ex: 3GYx...BzD9"/>
+
+      <label>Mint do USDC (Token Address)</label>
+      <input type="text" id="mint-usdc" placeholder="Ex: 4zMMC9...Devnet USDC"/>
+      <div class="hint">Na Devnet use: <strong style="color:var(--accent)">4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU</strong></div>
+
+      <label>Valor (em micro-USDC — 1 USDC = 1000000)</label>
+      <input type="number" id="amount-usdc" value="1000000"/>
+
+      <button class="btn btn-primary" id="btn-handshake" disabled>
+        🤝 Inicializar Handshake
+      </button>
+      <div id="handshake-result" style="margin-top:10px;font-size:.72rem;color:var(--muted)"></div>
+    </div>
+
+    <!-- CARD 2: GERENCIAR -->
+    <div class="card">
+      <div class="card-label">Instruções 02 & 03</div>
+      <h3>Gerenciar Acordo</h3>
+
+      <label>Endereço da Conta de Acordo (PDA)</label>
+      <input type="text" id="acordo-addr" placeholder="Gerado automaticamente no Handshake"/>
+
+      <button class="btn btn-primary" id="btn-liquidar" disabled style="margin-bottom:12px">
+        ✅ Executar Liquidação
+      </button>
+      <button class="btn btn-danger btn-outline" id="btn-disputa" disabled>
+        ⚠️ Abrir Disputa
+      </button>
+      <div id="sbt-badge-area"></div>
+    </div>
+
+  </div>
+
+  <!-- CARD CONSULTA -->
+  <div class="card" style="margin-bottom:22px">
+    <div class="card-label">Leitura On-Chain</div>
+    <h3>Consultar Estado do Acordo</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1;min-width:200px">
+        <label>Endereço da Conta</label>
+        <input type="text" id="consultar-addr" placeholder="Pubkey do AcordoMetadata..." style="margin-bottom:0"/>
+      </div>
+      <button class="btn btn-outline" id="btn-consultar" style="width:auto;padding:10px 22px;flex-shrink:0">
+        🔍 Consultar
+      </button>
+    </div>
+    <div class="result-box" id="consultar-result"></div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-wrap">
+    <div class="log-label">📡 Console — Transações & Eventos</div>
+    <div id="log"><span class="inf">» MIGI Trust Hub carregado. Conecte sua Phantom Wallet.</span></div>
+  </div>
+
+  <footer>
+    <p>MIGI Labs LLC · Solana Devnet ·
+      Program: <a href="https://explorer.solana.com/address/3aNa219G1VwZq2gC8NRL9NRGXCbrhnhqivHDpmZS8TeA?cluster=devnet" target="_blank">3aNa219G...S8TeA</a>
+    </p>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  MIGI TRUST HUB — Integração Solana
+//  Discriminators extraídos diretamente do IDL real (anchor build)
+// ═══════════════════════════════════════════════════════════════
+
+const PROGRAM_ID = new solanaWeb3.PublicKey("3aNa219G1VwZq2gC8NRL9NRGXCbrhnhqivHDpmZS8TeA");
+const CONN       = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
+
+// ── DISCRIMINATORS (do IDL real) ──────────────────────────────
+const DISC = {
+  handshake: new Uint8Array([36, 79, 193, 250, 13, 91, 31, 8]),
+  liquidacao: new Uint8Array([105, 194, 190, 62, 111, 158, 117, 67]),
+  disputa:    new Uint8Array([216, 134, 144, 188, 9, 11, 225, 221]),
+};
+
+// Endereços fixos
+const TOKEN_PROGRAM  = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+const SYSVAR_RENT    = new solanaWeb3.PublicKey("SysvarRent111111111111111111111111111111111");
+const SYSTEM_PROGRAM = solanaWeb3.SystemProgram.programId;
+
+// PDA do vault (seed: "vault")
+const [VAULT_PDA] = solanaWeb3.PublicKey.findProgramAddressSync(
+  [new TextEncoder().encode("vault")],
+  PROGRAM_ID
+);
+
+let wallet = null;
+
+// ── HELPERS ───────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const log = (msg, type = "inf") => {
+  const d = document.createElement("div");
+  d.className = type;
+  d.textContent = `[${new Date().toLocaleTimeString("pt-BR")}] ${msg}`;
+  $("log").appendChild(d);
+  $("log").scrollTop = $("log").scrollHeight;
+};
+const setStatus = (txt, dot = "") => {
+  $("status-text").textContent = txt;
+  $("net-dot").className = "dot " + dot;
+};
+const setSpin = (btn, on) => {
+  if (on) {
+    btn.disabled = true;
+    btn._lbl = btn.innerHTML;
+    btn.innerHTML = '<span class="spin"></span> Aguardando...';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn._lbl;
+  }
+};
+
+// ── CONECTAR PHANTOM ──────────────────────────────────────────
+$("btn-connect").addEventListener("click", async () => {
+  if (!window.solana?.isPhantom) {
+    log("Phantom não encontrada. Instale em phantom.app", "err");
+    window.open("https://phantom.app", "_blank");
+    return;
+  }
+  try {
+    setStatus("Solicitando acesso...", "yellow");
+    const resp = await window.solana.connect();
+    wallet = resp.publicKey;
+
+    $("wallet-addr").textContent = wallet.toBase58();
+    $("wallet-box").style.display = "block";
+    $("btn-connect").textContent = "✅ Conectado";
+    $("btn-connect").disabled = true;
+    ["btn-handshake","btn-liquidar","btn-disputa"].forEach(id => $(id).disabled = false);
+
+    setStatus(`Conectado: ${wallet.toBase58().slice(0,10)}...`, "green");
+    log(`Wallet: ${wallet.toBase58()}`, "ok");
+    await refreshBal();
+  } catch(e) {
+    log("Erro ao conectar: " + e.message, "err");
+    setStatus("Erro na conexão", "red");
+  }
+});
+
+async function refreshBal() {
+  const lamps = await CONN.getBalance(wallet);
+  $("wallet-bal").textContent = (lamps / solanaWeb3.LAMPORTS_PER_SOL).toFixed(4) + " SOL";
+}
+
+// ── SEND TX helper ────────────────────────────────────────────
+async function sendTx(instructions, signers = []) {
+  const { blockhash } = await CONN.getLatestBlockhash();
+  const tx = new solanaWeb3.Transaction({ recentBlockhash: blockhash, feePayer: wallet });
+  instructions.forEach(ix => tx.add(ix));
+  if (signers.length) tx.partialSign(...signers);
+  const signed = await window.solana.signTransaction(tx);
+  const sig = await CONN.sendRawTransaction(signed.serialize());
+  await CONN.confirmTransaction(sig, "confirmed");
+  return sig;
+}
+
+// ── INICIALIZAR HANDSHAKE VAULT ───────────────────────────────
+$("btn-handshake").addEventListener("click", async () => {
+  const prestadorStr = $("prestador-addr").value.trim();
+  const mintStr      = $("mint-usdc").value.trim();
+  const amount       = parseInt($("amount-usdc").value);
+
+  if (!prestadorStr || !mintStr) {
+    log("Preencha o endereço do prestador e o Mint do USDC.", "err"); return;
+  }
+
+  let prestadorPK, mintPK;
+  try {
+    prestadorPK = new solanaWeb3.PublicKey(prestadorStr);
+    mintPK      = new solanaWeb3.PublicKey(mintStr);
+  } catch { log("Endereço inválido.", "err"); return; }
+
+  setSpin($("btn-handshake"), true);
+  log("Criando conta de acordo e inicializando Handshake Vault...", "inf");
+
+  try {
+    const acordoKP = solanaWeb3.Keypair.generate();
+    log(`Nova conta de acordo: ${acordoKP.publicKey.toBase58()}`, "inf");
+
+    // Espaço: 8(disc) + 32 + 32 + 8 + 1 + 8 + 1 + 1 = 91
+    const SPACE = 91;
+    const rent  = await CONN.getMinimumBalanceForRentExemption(SPACE);
+
+    // Instrução 1: criar conta
+    const createIx = solanaWeb3.SystemProgram.createAccount({
+      fromPubkey:       wallet,
+      newAccountPubkey: acordoKP.publicKey,
+      lamports:         rent,
+      space:            SPACE,
+      programId:        PROGRAM_ID,
+    });
+
+    // Instrução 2: inicializar_handshake_vault
+    // data = discriminator(8) + amount_usdc(u64 le, 8 bytes)
+    const data = new Uint8Array(16);
+    data.set(DISC.handshake, 0);
+    const dv = new DataView(new ArrayBuffer(8));
+    dv.setBigUint64(0, BigInt(amount), true);
+    data.set(new Uint8Array(dv.buffer), 8);
+
+    // Precisamos da token account do cliente para o USDC
+    // Derivamos via Associated Token Account
+    const clienteUSDC = await getATA(wallet, mintPK);
+    const prestadorUSDC = await getATA(prestadorPK, mintPK);
+
+    const initIx = new solanaWeb3.TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: acordoKP.publicKey, isSigner: true,  isWritable: true  }, // acordo_dados
+        { pubkey: wallet,             isSigner: true,  isWritable: true  }, // cliente
+        { pubkey: prestadorPK,        isSigner: false, isWritable: false }, // prestador
+        { pubkey: clienteUSDC,        isSigner: false, isWritable: true  }, // cliente_usdc
+        { pubkey: VAULT_PDA,          isSigner: false, isWritable: true  }, // protocol_vault
+        { pubkey: mintPK,             isSigner: false, isWritable: false }, // mint_usdc
+        { pubkey: SYSTEM_PROGRAM,     isSigner: false, isWritable: false },
+        { pubkey: TOKEN_PROGRAM,      isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT,        isSigner: false, isWritable: false },
+      ],
+      data,
+    });
+
+    const sig = await sendTx([createIx, initIx], [acordoKP]);
+
+    log(`✅ Handshake criado! Conta: ${acordoKP.publicKey.toBase58()}`, "ok");
+    log(`TX: ${sig}`, "tx");
+    log(`🔗 https://explorer.solana.com/tx/${sig}?cluster=devnet`, "inf");
+
+    // Preencher campos automaticamente
+    $("acordo-addr").value   = acordoKP.publicKey.toBase58();
+    $("consultar-addr").value = acordoKP.publicKey.toBase58();
+    $("handshake-result").textContent = `Conta criada: ${acordoKP.publicKey.toBase58()}`;
+    $("handshake-result").style.color = "var(--green)";
+
+    await refreshBal();
+  } catch(e) {
+    log("Erro no Handshake: " + e.message, "err");
+    console.error(e);
+  }
+  setSpin($("btn-handshake"), false);
+});
+
+// ── EXECUTAR LIQUIDAÇÃO ───────────────────────────────────────
+$("btn-liquidar").addEventListener("click", async () => {
+  const acordoStr = $("acordo-addr").value.trim();
+  if (!acordoStr) { log("Informe o endereço da conta de acordo.", "err"); return; }
+
+  let acordoPK;
+  try { acordoPK = new solanaWeb3.PublicKey(acordoStr); }
+  catch { log("Endereço inválido.", "err"); return; }
+
+  setSpin($("btn-liquidar"), true);
+  log("Executando Liquidação...", "inf");
+
+  try {
+    // Precisamos do prestador_usdc — lemos da conta para pegar a Pubkey do prestador
+    const info = await CONN.getAccountInfo(acordoPK);
+    if (!info) { log("Conta de acordo não encontrada.", "err"); setSpin($("btn-liquidar"), false); return; }
+    const prestadorPK = new solanaWeb3.PublicKey(info.data.slice(8 + 32, 8 + 64));
+    const mintStr     = $("mint-usdc").value.trim() || "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+    const mintPK      = new solanaWeb3.PublicKey(mintStr);
+    const prestadorUSDC = await getATA(prestadorPK, mintPK);
+
+    const ix = new solanaWeb3.TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: acordoPK,       isSigner: false, isWritable: true  }, // acordo_dados
+        { pubkey: VAULT_PDA,      isSigner: false, isWritable: true  }, // protocol_vault
+        { pubkey: prestadorUSDC,  isSigner: false, isWritable: true  }, // prestador_usdc
+        { pubkey: wallet,         isSigner: true,  isWritable: false }, // cliente
+        { pubkey: TOKEN_PROGRAM,  isSigner: false, isWritable: false },
+      ],
+      data: DISC.liquidacao,
+    });
+
+    const sig = await sendTx([ix]);
+    log(`✅ Liquidação executada! SBT → Minted`, "ok");
+    log(`TX: ${sig}`, "tx");
+    log(`🔗 https://explorer.solana.com/tx/${sig}?cluster=devnet`, "inf");
+    showSBT(2);
+    await refreshBal();
+  } catch(e) {
+    log("Erro na Liquidação: " + e.message, "err");
+    console.error(e);
+  }
+  setSpin($("btn-liquidar"), false);
+});
+
+// ── ABRIR DISPUTA ─────────────────────────────────────────────
+$("btn-disputa").addEventListener("click", async () => {
+  const acordoStr = $("acordo-addr").value.trim();
+  if (!acordoStr) { log("Informe o endereço da conta de acordo.", "err"); return; }
+  if (!confirm("Confirma abertura de disputa? O capital será congelado.")) return;
+
+  let acordoPK;
+  try { acordoPK = new solanaWeb3.PublicKey(acordoStr); }
+  catch { log("Endereço inválido.", "err"); return; }
+
+  setSpin($("btn-disputa"), true);
+  log("Abrindo disputa — capital será congelado...", "inf");
+
+  try {
+    const ix = new solanaWeb3.TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: acordoPK, isSigner: false, isWritable: true  }, // acordo_dados
+        { pubkey: wallet,   isSigner: true,  isWritable: false }, // cliente
+      ],
+      data: DISC.disputa,
+    });
+    const sig = await sendTx([ix]);
+    log(`⚠️ Disputa aberta. Capital congelado.`, "err");
+    log(`TX: ${sig}`, "tx");
+  } catch(e) {
+    log("Erro ao abrir disputa: " + e.message, "err");
+    console.error(e);
+  }
+  setSpin($("btn-disputa"), false);
+});
+
+// ── CONSULTAR ACORDO ──────────────────────────────────────────
+$("btn-consultar").addEventListener("click", async () => {
+  const addrStr = $("consultar-addr").value.trim();
+  if (!addrStr) { log("Informe o endereço.", "err"); return; }
+
+  let pk;
+  try { pk = new solanaWeb3.PublicKey(addrStr); }
+  catch { log("Endereço inválido.", "err"); return; }
+
+  $("btn-consultar").textContent = "Consultando...";
+  $("btn-consultar").disabled = true;
+  log(`Lendo conta on-chain: ${addrStr.slice(0,12)}...`, "inf");
+
+  try {
+    const info = await CONN.getAccountInfo(pk);
+    if (!info) { log("Conta não encontrada na Devnet.", "err"); return; }
+
+    // Desserializar AcordoMetadata (Borsh)
+    // Layout após 8 bytes de discriminator:
+    // cliente(32) prestador(32) valor_travado(u64=8) status_sbt(u8=1) timestamp_inicio(i64=8) em_disputa(bool=1) liberado(bool=1)
+    const buf = info.data;
+    let o = 8;
+    const cliente   = new solanaWeb3.PublicKey(buf.slice(o, o+32)).toBase58(); o+=32;
+    const prestador = new solanaWeb3.PublicKey(buf.slice(o, o+32)).toBase58(); o+=32;
+    const valor     = Number(new DataView(buf.buffer, buf.byteOffset+o, 8).getBigUint64(0, true)); o+=8;
+    const sbt       = buf[o]; o+=1;
+    const ts        = Number(new DataView(buf.buffer, buf.byteOffset+o, 8).getBigInt64(0, true)); o+=8;
+    const disputa   = buf[o] === 1; o+=1;
+    const liberado  = buf[o] === 1;
+
+    const sbtLabel  = ["⬜ None", "🟡 Verified", "🟢 Minted"][sbt] || "?";
+    const tsStr     = ts > 0 ? new Date(ts * 1000).toLocaleString("pt-BR") : "—";
+
+    const $r = $("consultar-result");
+    $r.innerHTML = `
+      <div><span style="color:var(--muted)">Cliente:</span>  <span style="color:var(--accent)">${cliente.slice(0,20)}...</span></div>
+      <div><span style="color:var(--muted)">Prestador:</span> <span style="color:var(--accent)">${prestador.slice(0,20)}...</span></div>
+      <div><span style="color:var(--muted)">Valor Travado:</span> <strong>${(valor/1_000_000).toFixed(2)} USDC (${valor.toLocaleString()} µ)</strong></div>
+      <div><span style="color:var(--muted)">SBT Status:</span> <strong>${sbtLabel}</strong></div>
+      <div><span style="color:var(--muted)">Em Disputa:</span> <strong style="color:${disputa ? 'var(--red)' : 'var(--green)'}">${disputa ? '⛔ SIM' : '✅ NÃO'}</strong></div>
+      <div><span style="color:var(--muted)">Liberado:</span>   <strong style="color:${liberado ? 'var(--green)' : 'var(--muted)'}">${liberado ? '✅ SIM' : '⏳ NÃO'}</strong></div>
+      <div><span style="color:var(--muted)">Início:</span> ${tsStr}</div>
+    `;
+    $r.style.display = "block";
+    showSBT(sbt);
+    log("Conta lida com sucesso.", "ok");
+  } catch(e) {
+    log("Erro ao consultar: " + e.message, "err");
+    console.error(e);
+  }
+
+  $("btn-consultar").textContent = "🔍 Consultar";
+  $("btn-consultar").disabled = false;
+});
+
+// ── SBT BADGE ─────────────────────────────────────────────────
+function showSBT(s) {
+  const labels  = ["⬜ None", "🟡 Verificado", "🟢 SBT Minted"];
+  const classes = ["sbt-none", "sbt-verified", "sbt-minted"];
+  $("sbt-badge-area").innerHTML =
+    `<div class="sbt-badge ${classes[s]||'sbt-none'}">SBT: ${labels[s]||"None"}</div>`;
+}
+
+// ── ATA HELPER (Associated Token Account) ─────────────────────
+async function getATA(owner, mint) {
+  const ATA_PROGRAM = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bFG");
+  const [ata] = solanaWeb3.PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM.toBuffer(), mint.toBuffer()],
+    ATA_PROGRAM
+  );
+  return ata;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener("load", () => {
+  if (window.solana?.isPhantom) {
+    setStatus("Phantom detectada — clique para conectar", "yellow");
+    log("Phantom Wallet detectada.", "ok");
+  } else {
+    setStatus("Phantom não encontrada", "red");
+    log("Phantom não detectada. Instale em phantom.app", "err");
+  }
+});
+</script>
+</body>
+</html>

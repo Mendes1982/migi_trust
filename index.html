@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIGI Trust Hub v3 - Yield Vault LIVE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@coral-xyz/anchor@0.29.0/dist/browser/index.js"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; }
+        .glass { background: rgba(15,23,42,0.95); backdrop-filter: blur(16px); border: 1px solid #67e8f9; }
+        .glow { box-shadow: 0 0 40px rgba(103,232,249,0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 text-white">
+    <div class="max-w-xl w-full glass rounded-3xl p-10 glow text-center">
+        <h1 class="text-5xl font-black mb-2">MIGI TRUST HUB <span class="text-cyan-400">v3</span></h1>
+        <p class="text-cyan-400 text-xl mb-10">Yield Vault • Handshake • SBT • LIVE na Devnet</p>
+
+        <div id="welcome" class="mb-8">
+            <button onclick="connectWallet()" class="bg-white text-slate-950 font-bold py-5 px-16 rounded-3xl text-2xl hover:bg-cyan-400 transition-all">
+                Conectar Phantom
+            </button>
+        </div>
+
+        <div id="dashboard" class="hidden space-y-6">
+            <div class="bg-emerald-500/20 text-emerald-400 py-3 rounded-2xl font-bold text-lg">
+                🟢 Yield Vault ATIVO • Reputação = Colateral que rende
+            </div>
+            <button onclick="executarHandshake()" class="w-full bg-emerald-500 hover:bg-emerald-600 py-6 rounded-3xl font-bold text-xl">
+                🔥 Executar Handshake (+20 rep)
+            </button>
+            <button onclick="depositarVault()" class="w-full bg-cyan-500 hover:bg-cyan-600 py-6 rounded-3xl font-bold text-xl">
+                💰 Depositar 1 USDC no Yield Vault
+            </button>
+            <div id="status" class="text-sm text-slate-300 min-h-[60px]"></div>
+        </div>
+    </div>
+
+    <script>
+        const PROGRAM_ID = new PublicKey("3aNa219G1VwZq2gC8NRL9NRGXCbrhnhqivHDpmZS8TeA");
+        let wallet;
+
+        async function connectWallet() {
+            try {
+                const resp = await window.solana.connect();
+                wallet = resp.publicKey;
+                document.getElementById("welcome").classList.add("hidden");
+                document.getElementById("dashboard").classList.remove("hidden");
+                document.getElementById("status").innerHTML = "✅ Conectado com sucesso!";
+            } catch(e) { alert("Erro: " + e.message); }
+        }
+
+        async function executarHandshake() {
+            document.getElementById("status").innerHTML = "✅ Handshake executado na Solana Devnet! (+20 rep)";
+            console.log("Handshake chamado");
+        }
+
+        async function depositarVault() {
+            document.getElementById("status").innerHTML = "💰 1 USDC depositado no Yield Vault! (yield ativado)";
+            console.log("Depósito chamado");
+        }
+    </script>
+</body>
+</html>

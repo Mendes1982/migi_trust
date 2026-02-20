@@ -1,13 +1,21 @@
 [package]
 name = "migi_trust"
 version = "0.1.0"
+description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
+name = "migi_trust"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 [dependencies]
 anchor-lang = "0.30.1"
-
-[features]
-idl-build = ["anchor-lang/idl-build"]
+anchor-spl = "0.30.1"
